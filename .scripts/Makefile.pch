@@ -1,0 +1,4 @@
+$(PCH_OUT): $(PCH_PATH)
+	@echo "building pch"
+	$(CC) -c $(INC_FLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(PCH_OUT) $(PCH_PATH)
+

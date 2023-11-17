@@ -1,0 +1,9 @@
+*.o
+*.out
+*.d
+
+.cache/*
+
+.output/*
+.build/*
+doc/*
