@@ -1,4 +1,5 @@
 CC = clang
+DB = gdb
 MAKEFLAGS += -j -w -s
 
 MKDIR_P ?= mkdir -p
@@ -47,6 +48,10 @@ run: all
 	./$(OUTPUT_DIR)/$(TARGET_EXEC)
 
 
+debug: all
+	$(DB) ./$(OUTPUT_DIR)/$(TARGET_EXEC)
+
+
 clean:
 	$(RM) -r $(BUILD_DIR) 
 	$(RM) -r $(OUTPUT_DIR)
@@ -59,4 +64,4 @@ include $(SCRIPTS_DIR)/Makefile.doc
 -include $(DEPS)
 
 
-.PHONY: clean print all test run_test run build_test
+.PHONY: clean print all test run_test run build_test debug_test debug
