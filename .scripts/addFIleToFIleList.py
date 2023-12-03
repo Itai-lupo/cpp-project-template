@@ -12,7 +12,7 @@ def verfyFiles(files):
     '''
     files = [file for file in files if os.path.isfile(file[0])]
     files = sorted(files, key=lambda x: x[1])
-    for filename in list(glob.iglob('src/**/*.c*', recursive=True)) + list(glob.iglob('tests/**/**.c*', recursive=True)):
+    for filename in list(glob.iglob('src/**/*.c*', recursive=True)) + list(glob.iglob('tests/**/**.c*', recursive=True))+ list(glob.iglob('vendor/**/**.c*', recursive=True)):
         try:
             fileIndex = [file[0] for file in files].index(filename)
         except ValueError:

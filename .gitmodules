@@ -1,0 +1,3 @@
+[submodule "logger"]
+	path = vendor/logger
+	url = https://github.com/Itai-lupo/simple-logger

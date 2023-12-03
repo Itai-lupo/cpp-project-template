@@ -1,2 +1,2 @@
-SRC_DIRS += 
-INCLUDE_DIR += 
+SRC_DIRS += vendor/logger/src
+INCLUDE_DIR +=  vendor/logger/include

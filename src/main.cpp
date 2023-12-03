@@ -1,10 +1,12 @@
 #include "core.hpp"
+#include "log.h"
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) {
-  spdlog::info("hello world");
-  spdlog::error("error");
 
-  spdlog::set_pattern("[%H:%M:S %z]");
-  SPDLOG_DEBUG("debug message to default logger");
-  return 0;
+int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
+{
+	initLogger();
+	LOG_INFO("hello world");
+	closeLogger();
+
+	return 0;
 }
