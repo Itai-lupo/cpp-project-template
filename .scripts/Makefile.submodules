@@ -1,2 +1,2 @@
 SRC_DIRS += 
-INCLUDE_DIR += ./vendor/spdlog/include
+INCLUDE_DIR += 

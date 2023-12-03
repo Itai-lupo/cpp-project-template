@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #Declare list of dependencies
-declare -Ag deps=([spdlog]='spdlog')
+declare -Ag deps=([fmt]='fmt', [clang]='clang', [make]='make', [gtest]='gtest')
 
 #Declare list of package managers and their usages
 declare -Ag packman_list=([pacman]='pacman -Sy' [apt]='echo "deb http://deb.debian.org/debian buster-backports main contrib non-free" > /etc/apt/sources.list.d/buster-backports.list; apt update -y; apt install -y' [yum]='yum install -y epel-release; yum repolist -y; yum install -y')

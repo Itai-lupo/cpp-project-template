@@ -1,6 +1,6 @@
 CC = clang
 DB = gdb
-MAKEFLAGS += -j -w -s
+MAKEFLAGS += -j  -s
 
 MKDIR_P ?= mkdir -p
 
@@ -25,21 +25,34 @@ PCH_OUT = $(BUILD_DIR)/include/core.hpp.gch
 SRCS += $(foreach  dir,$(SRC_DIRS),$(call rwildcard,$(dir),*.c*)) 
 OBJS :=  $(call turnInfoObjectFile,$(SRCS))  
 DEPS := $(OBJS:.o=.d)
-CPPFLAGS ?=  -std=c++20 -Wno-c99-designator
-CFLAGS ?= -std=c99
+
+EXTRA_DEPENDENCIES := $(PCH_OUT)
 
 INC_FLAGS := $(addprefix -I,$(INCLUDE_DIR))
-CXXFLAGS += $(INC_FLAGS)  -MMD -MP -g -pthread -O0 -ggdb3 -Wall -Wextra -Werror -pedantic-errors 
+
+CXXFLAGS += $(INC_FLAGS)  -MMD -MP -g -pthread -O2 -ggdb3 -Wall -Wextra -Werror -pedantic-errors -DUSE_FILENAME
+CXXFLAGS +=  -Wno-gnu-zero-variadic-macro-arguments -Wno-gnu-anonymous-struct -Wno-nested-anon-types
+
+CFLAGS ?= -std=c2x 
+CPPFLAGS ?=  -std=c++20 -Wno-c99-designator
+
 LDFLAGS =  
-LDLIBS +=  -lstdc++ -lm -lspdlog -lfmt
+LDLIBS +=  -lstdc++ -lm -lfmt
+
+-include $(SCRIPTS_DIR)/Makefile.tests
+-include $(SCRIPTS_DIR)/Makefile.doc	
+-include $(SCRIPTS_DIR)/Makefile.build
+-include $(SCRIPTS_DIR)/Makefile.pch
+-include $(DEPS)
+
 
 all:
 	$(MAKE) $(BUILD_DIR)/include/files.json
 	$(MAKE) $(PCH_OUT)
-	compiledb  -o $(BUILD_DIR)/compile_commands.json $(MAKE) $(OUTPUT_DIR)/$(TARGET_EXEC)
+	compiledb --full-path --command-style  -o $(BUILD_DIR)/compile_commands.json $(MAKE) $(OUTPUT_DIR)/$(TARGET_EXEC)
 
 
-$(OUTPUT_DIR)/$(TARGET_EXEC): $(BUILD_DIR)/include/files.json $(PCH_OUT) $(OBJS) 
+$(OUTPUT_DIR)/$(TARGET_EXEC): $(EXTRA_DEPENDENCIES) $(OBJS) 
 	$(MKDIR_P) $(OUTPUT_DIR)
 	$(CC)  $(OBJS) -o $@ $(LDFLAGS) $(LDLIBS)
 
@@ -55,13 +68,6 @@ debug: all
 clean:
 	$(RM) -r $(BUILD_DIR) 
 	$(RM) -r $(OUTPUT_DIR)
-
-
--include $(SCRIPTS_DIR)/Makefile.tests
-include $(SCRIPTS_DIR)/Makefile.doc	
--include $(SCRIPTS_DIR)/Makefile.build
--include $(SCRIPTS_DIR)/Makefile.pch
--include $(DEPS)
 
 
 .PHONY: clean print all test run_test run build_test debug_test debug

@@ -18,3 +18,6 @@ $(BUILD_DIR)/include/files.json: $(SRCS)
 	$(MKDIR_P) $(BUILD_DIR)/include
 	python $(SCRIPTS_DIR)/addFIleToFIleList.py
 
+
+CXXFLAGS += -DFILE_ID=$(call getFileId,$<) 
+EXTRA_DEPENDENCIES += $(BUILD_DIR)/include/files.json
