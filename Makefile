@@ -1,8 +1,6 @@
 CC = clang
 DB = gdb
-MAKEFLAGS += -j  -s
-
-MKDIR_P ?= mkdir -p
+MAKEFLAGS += -j 20 -s 
 
 
 TARGET_EXEC ?= logger.out
@@ -16,13 +14,17 @@ TESTS_DIR ?= ./tests
 
 SCRIPTS_DIR ?= ./.scripts
 
+
 PCH_PATH = ./include/core.hpp
 PCH_OUT = $(BUILD_DIR)/include/core.hpp.gch
+
 
 -include $(SCRIPTS_DIR)/Makefile.utils 
 -include $(SCRIPTS_DIR)/Makefile.submodules
 
 SRCS += $(foreach  dir,$(SRC_DIRS),$(call rwildcard,$(dir),*.c*)) 
+
+
 OBJS :=  $(call turnInfoObjectFile,$(SRCS))  
 DEPS := $(OBJS:.o=.d)
 
@@ -31,20 +33,24 @@ EXTRA_DEPENDENCIES := $(PCH_OUT)
 INC_FLAGS := $(addprefix -I,$(INCLUDE_DIR))
 
 CXXFLAGS += $(INC_FLAGS)  -MMD -MP -g -pthread -O2 -ggdb3 -Wall -Wextra -Werror -pedantic-errors -DUSE_FILENAME
-CXXFLAGS +=  -Wno-gnu-zero-variadic-macro-arguments -Wno-gnu-anonymous-struct -Wno-nested-anon-types
+CXXFLAGS +=  -Wno-gnu-zero-variadic-macro-arguments -Wno-gnu-anonymous-struct -Wno-nested-anon-types -fmacro-backtrace-limit=0 
 
 CFLAGS ?= -std=c2x 
-CPPFLAGS ?=  -std=c++20 -Wno-c99-designator
+CPPFLAGS ?= -std=c++20 -Wno-c99-designator -Wno-c99-extensions
 
 LDFLAGS =  
 LDLIBS +=  -lstdc++ -lm -lfmt
 
+
+-include $(SCRIPTS_DIR)/Makefile.fileId
 -include $(SCRIPTS_DIR)/Makefile.tests
 -include $(SCRIPTS_DIR)/Makefile.doc	
 -include $(SCRIPTS_DIR)/Makefile.build
 -include $(SCRIPTS_DIR)/Makefile.pch
 -include $(DEPS)
 
+# print:
+	# @echo $(SRCS)
 
 all:
 	$(MAKE) $(BUILD_DIR)/include/files.json

@@ -1,3 +1,12 @@
 [submodule "logger"]
 	path = vendor/logger
-	url = https://github.com/Itai-lupo/simple-logger
+	url = git@github.com:Itai-lupo/simple-logger.git
+[submodule "err_macros"]
+	path = vendor/simple-error-check
+	url = git@github.com:Itai-lupo/simple-error-check.git
+[submodule "files"]
+	path = vendor/simple-files
+	url = git@github.com:Itai-lupo/simple-files.git
+[submodule "sockets"]
+	path = vendor/simple-sockets
+	url = git@github.com:Itai-lupo/simple-sockets.git
