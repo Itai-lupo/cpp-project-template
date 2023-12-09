@@ -1,2 +1,2 @@
-SRC_DIRS += vendor/logger/src vendor/simple-files/src vendor/simple-sockets/src
-INCLUDE_DIR +=  vendor/logger/include vendor/simple-error-check/include vendor/simple-files/include vendor/simple-sockets/include
+SRC_DIRS += vendor/logger/src vendor/simpleFiles/src vendor/simpleSockets/src
+INCLUDE_DIR +=  vendor/logger/include vendor/simpleErrorCheck/include vendor/simpleFiles/include vendor/simpleSockets/include

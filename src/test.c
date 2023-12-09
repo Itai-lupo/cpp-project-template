@@ -1,5 +1,5 @@
-#include "log.h"
 #include "test.h"
+#include "log.h"
 
 void logFromC()
 {
@@ -7,4 +7,5 @@ void logFromC()
 	LOG_INFO("hello from %s", "c");
 	CHECK(false);
 cleanup:
+    REWARN(err);
 }

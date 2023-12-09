@@ -29,10 +29,6 @@ build_tests:
 
 all_tests: $(OUTPUT_DIR)/test.out
 
-print:
-	@echo $(OUTPUT_DIR)/test.out
-
-
 $(OUTPUT_DIR)/test.out: $(TEST_OBJS)
 	$(MKDIR_P) $(OUTPUT_DIR)
 	$(CC)  $(CXXFLAGS) $(TEST_OBJS) -o $@ $(LDFLAGS) $(LDLIBS)
