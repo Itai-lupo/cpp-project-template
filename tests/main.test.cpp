@@ -1,5 +1,6 @@
 
 #include "core.hpp"
+#include "defines/logMacros.h"
 #include "test.h"
 
 #include <err.h>
@@ -12,23 +13,16 @@
 		x;                                                                                                             \
 		clock_gettime(CLOCK_REALTIME, &end);                                                                           \
 		double f = ((double)end.tv_sec * 1e9 + end.tv_nsec) - ((double)start.tv_sec * 1e9 + start.tv_nsec);            \
-		LOG_INFO("time {} ms", f / 1000000);                                                                         \
+		LOG_INFO("time {} ms", f / 1000000);                                                                           \
 	}
 
 int main(int argc, char **argv)
 {
-	err_t err = NO_ERRORCODE;
 	int res = 0;
 
-	std::cout << argv[1] << std::endl;
 	::testing::InitGoogleTest(&argc, argv);
-
-	QUITE_RETHROW(initLogger());
-
 	CHECK_TIME(res = RUN_ALL_TESTS());
 
-cleanup:
-	QUITE_RETHROW(closeLogger());
 	return res;
 }
 

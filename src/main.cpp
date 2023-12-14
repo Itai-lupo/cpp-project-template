@@ -49,7 +49,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 	struct timespec diffTime;
 	pthread_t loggerThread[10] = {0};
 
-	QUITE_RETHROW(initLogger());
 	LOG_WARN("aa {} aa", b);
 	LOG_ERR("aa");
 	LOG_INFO("aa {}", gettid());
@@ -66,6 +65,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 	{
 		pthread_join(loggerThread[i], NULL);
 	}
+
 	clock_gettime(CLOCK_REALTIME, &endTime);
 
 	diffTime = {endTime.tv_sec - startTime.tv_sec, endTime.tv_nsec - startTime.tv_nsec};
@@ -76,8 +76,5 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 	LOG_ERR("time diff on main thread {}.{}", diffTime.tv_sec, diffTime.tv_nsec);
 	LOG_CRITICAL("time diff on main thread {}.{}", diffTime.tv_sec, diffTime.tv_nsec);
 
-cleanup:
-
-    QUITE_RETHROW(closeLogger());
 	return err.value;
 }
