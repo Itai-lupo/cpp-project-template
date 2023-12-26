@@ -1,4 +1,5 @@
 
+#include "container.h"
 #include "core.hpp"
 #include "defines/logMacros.h"
 #include "test.h"
@@ -16,14 +17,30 @@
 		LOG_INFO("time {} ms", f / 1000000);                                                                           \
 	}
 
+err_t testsMain([[maybe_unused]] void *data)
+{
+	err_t err = NO_ERRORCODE;
+	int res = 0;
+	RETHROW(initLogger());
+	CHECK_TIME(res = RUN_ALL_TESTS());
+	CHECK(res == 0);
+
+cleanup:
+	REWARN(closeLogger());
+	return err;
+}
+
 int main(int argc, char **argv)
 {
-	int res = 0;
+	err_t err = NO_ERRORCODE;
+	pid_t pid = -1;
 
 	::testing::InitGoogleTest(&argc, argv);
-	CHECK_TIME(res = RUN_ALL_TESTS());
+	RETHROW(runInContainer(testsMain, 0, &pid));
+	QUITE_CHECK(waitpid(pid, NULL, 0) == pid);
 
-	return res;
+cleanup:
+	return err.errorCode;
 }
 
 TEST(log, log)
@@ -54,6 +71,6 @@ TEST(err, checkFail)
 	CHECK(false);
 
 cleanup:
-
+	ASSERT_FALSE(true);
 	LOG_TRACE("error: {}", err.value);
 }

@@ -1,80 +1,69 @@
+#include "container.h"
 #include "core.hpp"
+#include "files.h"
+#include "log.h"
+#include "processes.h"
 #include "test.h"
-#include <cstdio>
-#include <ctime>
-#include <err.h>
+
 #include <pthread.h>
+#include <sys/mount.h>
+#include <sys/wait.h>
 #include <unistd.h>
+
+#define CHECK_TIME(x)                                                                                                  \
+	{                                                                                                                  \
+		struct timespec start, end;                                                                                    \
+		clock_gettime(CLOCK_REALTIME, &start);                                                                         \
+		x;                                                                                                             \
+		clock_gettime(CLOCK_REALTIME, &end);                                                                           \
+		double f = ((double)end.tv_sec * 1e9 + end.tv_nsec) - ((double)start.tv_sec * 1e9 + start.tv_nsec);            \
+		LOG_INFO("time {} ms", f / 1000000);                                                                           \
+	}
 
 void *benchmarck(void *)
 {
-	struct timespec threadStartTime;
-	struct timespec processStartTime;
-
-	struct timespec threadEndTime;
-	struct timespec processEndTime;
-
-	struct timespec threadDiffTime;
-	struct timespec processDiffTime;
 	static int a = 0;
+	int b = a;
+
 	pthread_setname_np(pthread_self(), fmt::format("logThread {}", a++).data());
-	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &threadStartTime);
-	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &processStartTime);
-
-	for (int i = 0; i < 100000; i++)
-	{
-
-		LOG_TRACE("start time = {}, {}", threadStartTime.tv_nsec, i);
-	}
-
-	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &threadEndTime);
-	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &processEndTime);
-
-	threadDiffTime = {threadEndTime.tv_sec - threadStartTime.tv_sec, threadEndTime.tv_nsec - threadStartTime.tv_nsec};
-	processDiffTime = {processEndTime.tv_sec - processStartTime.tv_sec,
-					   processEndTime.tv_nsec - processStartTime.tv_nsec};
-
-	LOG_INFO("time on benchmarck thread {}.{}", threadDiffTime.tv_sec, threadDiffTime.tv_nsec);
-	LOG_INFO("time on for full process {}.{}", processDiffTime.tv_sec, processDiffTime.tv_nsec);
+	CHECK_TIME(for (int i = 0; i < 100000 / 100; i++) { LOG_TRACE("{}: {}", b, i); });
 
 	return NULL;
 }
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
+err_t childMain([[maybe_unused]] void *data)
 {
+
 	err_t err = NO_ERRORCODE;
 	[[maybe_unused]] int b = 0;
-	struct timespec startTime;
-	struct timespec endTime;
-	struct timespec diffTime;
 	pthread_t loggerThread[10] = {0};
+
+	QUITE_CHECK(mount("./tmp", "./tmp", "tmpfs", 0, NULL) == 0);
+
+	QUITE_RETHROW(initLogger());
 
 	LOG_WARN("aa {} aa", b);
 	LOG_ERR("aa");
 	LOG_INFO("aa {}", gettid());
 	logFromC();
 
-	clock_gettime(CLOCK_REALTIME, &startTime);
+	CHECK_TIME(
+		for (size_t i = 0; i < 10; i++) { pthread_create(&loggerThread[i], NULL, benchmarck, NULL); }
 
-	for (size_t i = 0; i < 10; i++)
-	{
-		pthread_create(&loggerThread[i], NULL, benchmarck, NULL);
-	}
+		for (size_t i = 0; i < 10; i++) { pthread_join(loggerThread[i], NULL); });
 
-	for (size_t i = 0; i < 10; i++)
-	{
-		pthread_join(loggerThread[i], NULL);
-	}
+cleanup:
+	REWARN(closeLogger());
+	return err;
+}
 
-	clock_gettime(CLOCK_REALTIME, &endTime);
+int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
+{
+	err_t err = NO_ERRORCODE;
+	pid_t pid;
 
-	diffTime = {endTime.tv_sec - startTime.tv_sec, endTime.tv_nsec - startTime.tv_nsec};
-	LOG_TRACE("time diff on main thread {}.{}", diffTime.tv_sec, diffTime.tv_nsec);
-	LOG_DEBUG("time diff on main thread {}.{}", diffTime.tv_sec, diffTime.tv_nsec);
-	LOG_INFO("time diff on main thread {}.{}", diffTime.tv_sec, diffTime.tv_nsec);
-	LOG_WARN("time diff on main thread {}.{}", diffTime.tv_sec, diffTime.tv_nsec);
-	LOG_ERR("time diff on main thread {}.{}", diffTime.tv_sec, diffTime.tv_nsec);
-	LOG_CRITICAL("time diff on main thread {}.{}", diffTime.tv_sec, diffTime.tv_nsec);
-
+	QUITE_RETHROW(runInContainer(childMain, NULL, &pid));
+	QUITE_CHECK(waitpid(pid, NULL, 0) == pid);
+cleanup:
 	return err.value;
 }
