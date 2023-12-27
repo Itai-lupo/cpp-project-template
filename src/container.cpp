@@ -26,10 +26,10 @@ int createContainerCallback(void *data)
 	QUITE_RETHROW(setUserPolicy(continerInfo->uid, continerInfo->gid));
 
 	QUITE_CHECK(mount("proc", "/proc", "proc", 0, NULL) == 0);
-	continerInfo->callback(continerInfo->data);
+	QUITE_RETHROW(continerInfo->callback(continerInfo->data));
 
 cleanup:
-	return err.value;
+	return err.errorCode;
 }
 
 THROWS err_t runInContainer(err_t (*callback)(void *), void *data, pid_t *childPid)

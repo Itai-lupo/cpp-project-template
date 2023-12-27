@@ -1,9 +1,10 @@
 
 #include "container.h"
 #include "core.hpp"
-#include "defines/logMacros.h"
+#include "processes.h"
 #include "test.h"
 
+#include <cstdint>
 #include <err.h>
 #include <gtest/gtest.h>
 
@@ -23,10 +24,10 @@ err_t testsMain([[maybe_unused]] void *data)
 	int res = 0;
 	RETHROW(initLogger());
 	CHECK_TIME(res = RUN_ALL_TESTS());
-	CHECK(res == 0);
+	CHECK_ERRORCODE(res == 0, (uint64_t)res);
 
 cleanup:
-	REWARN(closeLogger());
+	closeLogger();
 	return err;
 }
 
@@ -34,12 +35,25 @@ int main(int argc, char **argv)
 {
 	err_t err = NO_ERRORCODE;
 	pid_t pid = -1;
+	processState_t mainProcessExitStatus = {{{0, 0, 0, 0, 0}}, {0}};
 
 	::testing::InitGoogleTest(&argc, argv);
-	RETHROW(runInContainer(testsMain, 0, &pid));
-	QUITE_CHECK(waitpid(pid, NULL, 0) == pid);
+	QUITE_RETHROW(runInContainer(testsMain, 0, &pid));
+	QUITE_RETHROW(safeWaitPid(pid, &mainProcessExitStatus, 0));
 
 cleanup:
+	if (mainProcessExitStatus.exitBy.normal)
+	{
+		printf("exited normaly with %d\n", mainProcessExitStatus.exitStatus);
+		return mainProcessExitStatus.exitStatus;
+	}
+	else if (mainProcessExitStatus.exitBy.signal)
+	{
+		printf("exited by signal %d and %s left coredump", mainProcessExitStatus.terminatedBySignal,
+			   (mainProcessExitStatus.exitBy.leftCoreDump ? "" : "didn't"));
+		return err.errorCode;
+	}
+
 	return err.errorCode;
 }
 
@@ -71,6 +85,5 @@ TEST(err, checkFail)
 	CHECK(false);
 
 cleanup:
-	ASSERT_FALSE(true);
 	LOG_TRACE("error: {}", err.value);
 }

@@ -5,6 +5,7 @@
 #include "processes.h"
 #include "test.h"
 
+#include <csignal>
 #include <pthread.h>
 #include <sys/mount.h>
 #include <sys/wait.h>
@@ -39,7 +40,6 @@ err_t childMain([[maybe_unused]] void *data)
 	pthread_t loggerThread[10] = {0};
 
 	QUITE_CHECK(mount("./tmp", "./tmp", "tmpfs", 0, NULL) == 0);
-
 	QUITE_RETHROW(initLogger());
 
 	LOG_WARN("aa {} aa", b);
@@ -61,9 +61,23 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 {
 	err_t err = NO_ERRORCODE;
 	pid_t pid;
+	processState_t mainProcessExitStatus = {{{0, 0, 0, 0, 0}}, {0}};
 
 	QUITE_RETHROW(runInContainer(childMain, NULL, &pid));
-	QUITE_CHECK(waitpid(pid, NULL, 0) == pid);
+	QUITE_RETHROW(safeWaitPid(pid, &mainProcessExitStatus, 0));
+
 cleanup:
-	return err.value;
+	if (mainProcessExitStatus.exitBy.normal)
+	{
+		printf("exited normaly with %d\n", mainProcessExitStatus.exitStatus);
+		return mainProcessExitStatus.exitStatus;
+	}
+	else if (mainProcessExitStatus.exitBy.signal)
+	{
+		printf("exited by signal %d and %s left coredump ", mainProcessExitStatus.terminatedBySignal,
+			   (mainProcessExitStatus.exitBy.leftCoreDump ? "" : "didn't"));
+		return err.errorCode;
+	}
+
+	return err.errorCode;
 }
