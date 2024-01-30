@@ -74,7 +74,7 @@ THROWS err_t closeBuddyAllocator()
 	QUITE_CHECK(memoryPoolInterface.startAddr != nullptr);
 
 	memoryPoolInterface = {nullptr, nullptr, nullptr};
-
+	LOG_INFO("close");
 cleanup:
 	return err;
 }
@@ -85,6 +85,10 @@ THROWS err_t buddyAlloc(void **ptr, size_t size)
 	size_t poolSize = 0;
 	size_t wantedPowerOf2 = 0;
 	int i = 0;
+	uint8_t *order = nullptr;
+
+	// mangment data
+	size++;
 
 	QUITE_CHECK(memoryPoolInterface.startAddr != nullptr);
 
@@ -95,7 +99,6 @@ THROWS err_t buddyAlloc(void **ptr, size_t size)
 
 	wantedPowerOf2 = ceil(log2((double)MAX(size, minAllocation)) - log2((double)minAllocation));
 
-	// LOG_INFO("for size {} you get free list number {}", size, wantedPowerOf2);
 	QUITE_CHECK(freeListsCount >= wantedPowerOf2);
 
 	if (freeLists[wantedPowerOf2].freeItems > 0)
@@ -115,9 +118,6 @@ THROWS err_t buddyAlloc(void **ptr, size_t size)
 		QUITE_CHECK((size_t)i <= freeListsCount);
 
 		*ptr = freeLists[i].list[freeLists[i].freeItems - 1];
-		// LOG_INFO("got addr {} from list {} which had {} items. start addr is {} and this is {} from it", *ptr, i,
-		// freeLists[i].freeItems, memoryPoolInterface.startAddr,
-		// (char *)*ptr - (char *)memoryPoolInterface.startAddr);
 
 		freeLists[i].list[freeLists[i].freeItems - 1] = nullptr;
 		freeLists[i].freeItems--;
@@ -127,11 +127,14 @@ THROWS err_t buddyAlloc(void **ptr, size_t size)
 		for (; i >= (int)wantedPowerOf2; i--)
 		{
 			QUITE_CHECK(freeLists[i].freeItems <= freeLists[i].listMaxSize);
-			// LOG_INFO("add item {} to list {}", (void *)((char *)(*ptr) + (size_t)(minAllocation * pow(2, i))), i);
 			freeLists[i].list[freeLists[i].freeItems] = (void *)((char *)(*ptr) + (size_t)(minAllocation * pow(2, i)));
 			freeLists[i].freeItems++;
 		}
 	}
+
+	order = (uint8_t *)*ptr;
+	*order = wantedPowerOf2;
+	*ptr = (char *)*ptr + 1;
 
 	if (((char *)*ptr - (char *)memoryPoolInterface.startAddr) + pow(2, wantedPowerOf2) > poolSize)
 	{
@@ -148,11 +151,47 @@ cleanup:
 THROWS err_t buddyFree(void **ptr)
 {
 	err_t err = NO_ERRORCODE;
+	uint8_t order = 0;
+	size_t size = 0;
+	void *buddyAddr = nullptr;
+	bool foundBuddy = true;
 
 	QUITE_CHECK(ptr != NULL);
-
 	QUITE_CHECK(memoryPoolInterface.startAddr != nullptr);
+	QUITE_CHECK(*ptr >= memoryPoolInterface.startAddr && *ptr <= (char *)memoryPoolInterface.startAddr + maxSize);
 
+	order = *((uint8_t *)*ptr - 1);
+	*ptr = (char *)*ptr - 1;
+
+	for (; order <= freeListsCount && foundBuddy; order++)
+	{
+		foundBuddy = false;
+
+		size = minAllocation * pow(2, order);
+
+		buddyAddr = (void *)((char *)*ptr +
+							 (1 - ((((char *)*ptr - (char *)memoryPoolInterface.startAddr) / size) % 2) * 2) * size);
+
+		LOG_INFO("offset of {} size {} from start in order {} buddy addr is {}", *ptr, size, order, buddyAddr);
+
+		for (size_t i = 0; i < freeLists[order].freeItems; i++)
+		{
+			if (freeLists[order].list[i] == buddyAddr)
+			{
+				foundBuddy = true;
+				LOG_INFO("found buddy at {} with order {}", i, order);
+				freeLists[order].list[i] = freeLists[order].list[freeLists[order].freeItems - 1];
+				freeLists[order].freeItems--;
+
+				freeLists[order + 1].list[freeLists[order + 1].freeItems] = MIN(buddyAddr, *ptr);
+				freeLists[order + 1].freeItems++;
+			}
+		}
+
+		*ptr = MIN(buddyAddr, *ptr);
+	}
+
+	*ptr = nullptr;
 cleanup:
 	return err;
 }

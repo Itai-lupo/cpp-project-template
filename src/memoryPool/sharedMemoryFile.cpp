@@ -1,9 +1,11 @@
 #include "memoryPool/sharedMemoryFile.h"
+
 #include "defaultTrace.h"
 
 #include "err.h"
 #include "files.h"
 
+#include <fcntl.h>
 #include <linux/memfd.h>
 #include <sys/mman.h>
 
@@ -11,6 +13,21 @@ size_t maxSize = 0;
 size_t *currentSize = nullptr;
 void *startAddr = nullptr;
 fd_t memfd = INVALID_FD;
+
+THROWS err_t initHugeFs(size_t hugefsSize)
+{
+	fd_t hugeNr = INVALID_FD;
+	err_t err = NO_ERRORCODE;
+	ssize_t bytesWritten = 0;
+	QUITE_RETHROW(
+		safeOpenFmt("/sys/kernel/mm/hugepages/hugepages-%lukB/nr_hugepages", O_WRONLY, 0, &hugeNr, hugefsSize));
+
+	QUITE_RETHROW(safeWrite(hugeNr, "1000", sizeof("1000"), &bytesWritten));
+
+cleanup:
+	safeClose(&hugeNr);
+	return err;
+}
 
 THROWS err_t initSharedMemoryFile(size_t _maxSize)
 {
@@ -20,15 +37,16 @@ THROWS err_t initSharedMemoryFile(size_t _maxSize)
 	QUITE_CHECK(startAddr == nullptr);
 	QUITE_CHECK(IS_INVALID_FD(memfd));
 
-	memfd.fd = memfd_create("shared memory pool", MFD_HUGETLB | MFD_HUGE_2MB);
+	// QUITE_RETHROW(initHugeFs(2048));
+
+	memfd.fd = memfd_create("shared memory pool", 0 /* MFD_HUGETLB | MFD_HUGE_2MB */);
 	QUITE_CHECK(IS_VALID_FD(memfd));
 
 	currentSize = new size_t(0);
 
-
 	maxSize = _maxSize;
-	startAddr =
-		mmap(NULL, maxSize, PROT_READ | PROT_WRITE, MAP_SHARED_VALIDATE | MAP_HUGETLB | MAP_NORESERVE, memfd.fd, 0);
+	startAddr = mmap(NULL, maxSize, PROT_READ | PROT_WRITE, MAP_SHARED_VALIDATE /* | MAP_HUGETLB | MAP_NORESERVE */,
+					 memfd.fd, 0);
 	QUITE_CHECK(startAddr != MAP_FAILED);
 
 cleanup:
