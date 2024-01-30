@@ -6,8 +6,12 @@
 #include "test.h"
 
 #include <csignal>
+#include <fmt/color.h>
+#include <fmt/core.h>
+
 #include <pthread.h>
 #include <sys/mount.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -27,11 +31,11 @@ void *benchmarck(void *)
 	int b = a;
 
 	pthread_setname_np(pthread_self(), fmt::format("logThread {}", a++).data());
-	CHECK_TIME(for (int i = 0; i < 100000 / 100; i++) { LOG_TRACE("{}: {}", b, i); });
+	CHECK_TIME(for (int i = 0; i < 100000 / 1; i++) { LOG_TRACE("{}: {}", b, i); });
 
 	return NULL;
 }
-
+using namespace fmt::literals;
 err_t childMain([[maybe_unused]] void *data)
 {
 
@@ -42,9 +46,9 @@ err_t childMain([[maybe_unused]] void *data)
 	QUITE_CHECK(mount("./tmp", "./tmp", "tmpfs", 0, NULL) == 0);
 	QUITE_RETHROW(initLogger());
 
-	LOG_WARN("aa {} aa", b);
+	LOG_WARN("aa {} aa", fmt::styled(b, fmt::fg(fmt::color::green) | fmt::bg(fmt::color::blue)));
 	LOG_ERR("aa");
-	LOG_INFO("aa {}", gettid());
+	LOG_INFO("aa {aaa:}", "aaa"_a = gettid());
 	logFromC();
 
 	CHECK_TIME(
@@ -63,6 +67,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 	pid_t pid;
 	processState_t mainProcessExitStatus = {{{0, 0, 0, 0, 0}}, {0}};
 
+
+	umask(0);
 	QUITE_RETHROW(runInContainer(childMain, NULL, &pid));
 	QUITE_RETHROW(safeWaitPid(pid, &mainProcessExitStatus, 0));
 

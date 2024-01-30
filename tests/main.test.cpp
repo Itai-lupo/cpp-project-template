@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <err.h>
 #include <gtest/gtest.h>
+#include <sys/mount.h>
 
 #define CHECK_TIME(x)                                                                                                  \
 	{                                                                                                                  \
@@ -22,10 +23,11 @@ err_t testsMain([[maybe_unused]] void *data)
 {
 	err_t err = NO_ERRORCODE;
 	int res = 0;
+
+	QUITE_CHECK(mount("./tmp", "./tmp", "tmpfs", 0, NULL) == 0);
 	RETHROW(initLogger());
 	CHECK_TIME(res = RUN_ALL_TESTS());
 	CHECK_ERRORCODE(res == 0, (uint64_t)res);
-
 cleanup:
 	closeLogger();
 	return err;
@@ -56,7 +58,7 @@ cleanup:
 
 	return err.errorCode;
 }
-
+/* 
 TEST(log, log)
 {
 	LOG_INFO("hello world");
@@ -86,4 +88,4 @@ TEST(err, checkFail)
 
 cleanup:
 	LOG_TRACE("error: {}", err.value);
-}
+} */

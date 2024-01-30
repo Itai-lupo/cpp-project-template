@@ -16,7 +16,6 @@
 
 #include "types/err_t.h"
 
-#define STACK_SIZE (1024 * 1024)
 typedef err_t (*containerCallback)(void *);
 
 #ifdef __cplusplus

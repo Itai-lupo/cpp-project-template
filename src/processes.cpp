@@ -55,6 +55,46 @@ cleanup:
 	return err;
 }
 
+THROWS err_t safeWaitPid(const pid_t pid, processState_t *status, int options)
+{
+	err_t err = NO_ERRORCODE;
+	int tempStatus;
+	int res = 0;
+
+	QUITE_CHECK(status != NULL);
+
+	do
+	{
+		res = waitpid(pid, &tempStatus, options);
+	} while (res >= 0 && errno == EINTR);
+
+	QUITE_CHECK(res == pid || res == 0);
+
+	status->exitBy.normal = WIFEXITED(tempStatus);
+	status->exitBy.signal = WIFSIGNALED(tempStatus);
+	status->exitBy.leftCoreDump = WCOREDUMP(tempStatus);
+	status->exitBy.resumed = WIFCONTINUED(tempStatus);
+	status->exitBy.stopped = WIFSTOPPED(tempStatus);
+
+	if (status->exitBy.normal)
+	{
+		status->exitStatus = WEXITSTATUS(tempStatus);
+	}
+	else if (status->exitBy.signal)
+	{
+
+		status->terminatedBySignal = WTERMSIG(tempStatus);
+	}
+	else if (status->exitBy.stopped)
+	{
+
+		status->stopSignal = WSTOPSIG(tempStatus);
+	}
+
+cleanup:
+	return err;
+}
+
 THROWS err_t setUserPolicy(const uid_t uid, const gid_t gid)
 {
 	err_t err = NO_ERRORCODE;
@@ -90,45 +130,5 @@ cleanup:
 		safeClose(&setgroupsFd);
 	}
 
-	return err;
-}
-
-THROWS err_t safeWaitPid(const pid_t pid, processState_t *status, int options)
-{
-	err_t err = NO_ERRORCODE;
-	int tempStatus;
-	int res = 0;
-
-	CHECK(status != NULL);
-
-	do
-	{
-		res = waitpid(pid, &tempStatus, options);
-	} while (res >= 0 && errno == EINTR);
-
-	CHECK(res == pid || res == 0);
-
-	status->exitBy.normal = WIFEXITED(tempStatus);
-	status->exitBy.signal = WIFSIGNALED(tempStatus);
-	status->exitBy.leftCoreDump = WCOREDUMP(tempStatus);
-	status->exitBy.resumed = WIFCONTINUED(tempStatus);
-	status->exitBy.stopped = WIFSTOPPED(tempStatus);
-
-	if (status->exitBy.normal)
-	{
-		status->exitStatus = WEXITSTATUS(tempStatus);
-	}
-	else if (status->exitBy.signal)
-	{
-
-		status->terminatedBySignal = WTERMSIG(tempStatus);
-	}
-	else if (status->exitBy.stopped)
-	{
-
-		status->stopSignal = WSTOPSIG(tempStatus);
-	}
-
-cleanup:
 	return err;
 }

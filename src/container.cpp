@@ -1,5 +1,6 @@
 #include "container.h"
 #include "defaultTrace.h"
+#include "defines/rethrowApi.h"
 #include "err.h"
 #include "processes.h"
 
@@ -9,6 +10,9 @@
 #include <sys/mman.h>
 #include <sys/mount.h>
 #include <sys/prctl.h>
+#include <unistd.h>
+
+#define STACK_SIZE (1024 * 1024)
 
 typedef struct
 {
@@ -22,10 +26,10 @@ int createContainerCallback(void *data)
 {
 	err_t err = NO_ERRORCODE;
 	passToChild_t *continerInfo = (passToChild_t *)data;
-
 	QUITE_RETHROW(setUserPolicy(continerInfo->uid, continerInfo->gid));
 
 	QUITE_CHECK(mount("proc", "/proc", "proc", 0, NULL) == 0);
+
 	QUITE_RETHROW(continerInfo->callback(continerInfo->data));
 
 cleanup:
@@ -46,8 +50,9 @@ THROWS err_t runInContainer(err_t (*callback)(void *), void *data, pid_t *childP
 	CHECK(stack != MAP_FAILED);
 	stackTop = stack + STACK_SIZE;
 
-	pid = clone(createContainerCallback, stackTop,
-				CLONE_NEWIPC | CLONE_NEWPID | CLONE_NEWUSER | CLONE_NEWNS | SIGCHLD | CLONE_PTRACE, &d);
+	pid =
+		clone(createContainerCallback, stackTop,
+			  CLONE_NEWIPC | CLONE_NEWPID | CLONE_NEWUSER | CLONE_NEWNS | SIGCHLD | CLONE_PTRACE | CLONE_NEWCGROUP, &d);
 	CHECK(pid != -1);
 
 	*childPid = pid;

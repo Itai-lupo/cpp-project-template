@@ -6,6 +6,9 @@ TEST_DEPS := $(TEST_OBJS:.o=.d)
 
 TEST_INCLUDE_DIRS := $(TEST_DIR)/include
 
+ifdef $(PROFILE)
+CXXFLAGS += -fprofile-instr-generate -fcoverage-mapping -mllvm -runtime-counter-relocation
+endif
 
 ifeq ($(MAKECMDGOALS),all_tests)
 	INC_FLAGS += $(addprefix -I,$(TEST_INCLUDE_DIRS))
