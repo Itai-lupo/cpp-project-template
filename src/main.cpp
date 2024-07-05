@@ -1,11 +1,8 @@
 #include "container.h"
-#include "core.hpp"
-#include "files.h"
 #include "log.h"
 #include "processes.h"
 #include "test.h"
 
-#include <csignal>
 #include <fmt/color.h>
 #include <fmt/core.h>
 
@@ -64,7 +61,7 @@ cleanup:
 int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 {
 	err_t err = NO_ERRORCODE;
-	pid_t pid;
+	pid_t pid = 0;
 	processState_t mainProcessExitStatus = {{{0, 0, 0, 0, 0}}, {0}};
 
 

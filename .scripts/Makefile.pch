@@ -3,7 +3,7 @@
 $(PCH_OUT): $(PCH_PATH)
 	@echo "building pch" 
 	@echo $(MAKECMDGOALS) $(PCH_OUT)
-	$(CC) -c $(INC_FLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(PCH_OUT) $(PCH_PATH)
+	$(CXX) -c $(INC_FLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(PCH_OUT) $(PCH_PATH)
 
 
 ifneq (./$(MAKECMDGOALS),$(PCH_OUT))

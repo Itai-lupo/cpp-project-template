@@ -1,6 +1,6 @@
 #include "memoryPool/sharedMemoryFile.h"
 
-#include "defaultTrace.h"
+#include "log.h"
 
 #include "err.h"
 #include "files.h"
@@ -75,10 +75,11 @@ THROWS err_t setSharedMemoryFileSize(size_t size)
 
 	QUITE_CHECK(currentSize != nullptr);
 	QUITE_CHECK(IS_VALID_FD(memfd));
-	CHECK_TRACE((size % (1 << 21)) == 0, "size is not huge pages allinged %lu %lu", (size % (1 << 21)), size);
+	CHECK_TRACE((size % (1 << 21)) == 0, "size is not huge pages allinged {} {}", (size % (1 << 21)), size);
 
 	QUITE_CHECK(ftruncate(memfd.fd, size) == 0);
 	*currentSize = size;
+
 cleanup:
 	return err;
 }

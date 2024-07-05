@@ -1,6 +1,7 @@
-CC = clang
+CC ?= clang
+CXX ?= clang++
 DB = gdb
-MAKEFLAGS += -j 20 -s 
+MAKEFLAGS += -j 20  -s
 
 
 TARGET_EXEC ?= logger.out

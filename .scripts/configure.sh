@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #Declare list of dependencies
 declare -Ag deps=([fmt]='fmt', [clang]='clang', [make]='make', [gtest]='gtest')

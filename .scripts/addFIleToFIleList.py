@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+
 import json
 import os.path
 import sys

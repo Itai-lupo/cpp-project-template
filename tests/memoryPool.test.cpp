@@ -1,6 +1,7 @@
 #include "log.h"
 
 #include "err.h"
+#include "memoryPool/types/memoryAllocator.h"
 #include "processes.h"
 #include "sharedMemoryPool.h"
 
@@ -8,6 +9,7 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <unistd.h>
+
 TEST(sharedMemoryPool, initAndClose)
 {
 	err_t err = NO_ERRORCODE;
@@ -26,7 +28,7 @@ TEST(sharedMemoryPool, allocAndDealloc)
 
 	RETHROW(initSharedMemory());
 
-	RETHROW(sharedAlloc((void **)&data, sizeof(int)));
+	RETHROW(sharedAlloc((void **)&data, 1, sizeof(int), 1));
 	ASSERT_NE(data, nullptr);
 
 	*data = 1;
@@ -49,7 +51,7 @@ TEST(sharedMemoryPool, allocAndDeallocAndFork)
 
 	RETHROW(initSharedMemory());
 
-	RETHROW(sharedAlloc((void **)&data, sizeof(int)));
+	RETHROW(sharedAlloc((void **)&data, 1, sizeof(int), 1));
 	ASSERT_NE(data, nullptr);
 
 	*data = 1;
@@ -88,13 +90,13 @@ TEST(sharedMemoryPool, forkAndThenMallocAndPlaceInMallocedPtr)
 
 	RETHROW(initSharedMemory());
 
-	RETHROW(sharedAlloc((void **)&dataPtr, sizeof(int *)));
+	RETHROW(sharedAlloc((void **)&dataPtr, 1, sizeof(int *), 1));
 	pid = fork();
 	CHECK(pid >= 0);
 
 	if (pid == 0)
 	{
-		RETHROW(sharedAlloc((void **)dataPtr, sizeof(int)));
+		RETHROW(sharedAlloc((void **)dataPtr, 1, sizeof(int), 1));
 		ASSERT_NE(dataPtr, nullptr);
 		**dataPtr = 2;
 		ASSERT_EQ(**dataPtr, 2);
@@ -121,18 +123,42 @@ TEST(sharedMemoryPool, useALotOfMemory)
 {
 	err_t err = NO_ERRORCODE;
 	char *data = NULL;
-	constexpr size_t dataSetSize = 4096 * 16 + 1; // *4000000;
+	constexpr size_t dataSetSize = 4000000;
 
 	RETHROW(initSharedMemory());
-	RETHROW(sharedAlloc((void **)&data, dataSetSize));
+	RETHROW(sharedAlloc((void **)&data, dataSetSize, sizeof(char), 0));
 	ASSERT_NE(data, nullptr);
 
-	memset(data, 0, dataSetSize);
+	data[dataSetSize - 1] = 0;
+	// memset(data, 0, dataSetSize);
 
 	RETHROW(sharedDealloc((void **)&data));
 	ASSERT_EQ(data, nullptr);
 
 cleanup:
+	REWARN(closeSharedMemory());
+	ASSERT_TRUE(!IS_ERROR(err));
+}
+
+TEST(sharedMemoryPool, useAllTheMemory)
+{
+	err_t err = NO_ERRORCODE;
+	int *data = NULL;
+    
+	RETHROW(initSharedMemory());
+
+	while (true)
+	{
+		RETHROW(sharedAlloc((void **)&data, 1, sizeof(int), ALLOCATOR_CLEAR_MEMORY));
+		ASSERT_NE(data, nullptr);
+
+		*data = 0;
+        data = nullptr;
+	}
+
+cleanup:
+
+    err = NO_ERRORCODE;
 	REWARN(closeSharedMemory());
 	ASSERT_TRUE(!IS_ERROR(err));
 }

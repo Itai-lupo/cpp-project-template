@@ -3,7 +3,7 @@
 $(BUILD_DIR)/%.o: %.cpp
 	@echo "building file: " $< " with id " $(call getFileId,$<)
 	$(MKDIR_P) $(dir $@)
-	$(CC)  $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CXX)  $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 
 #c source
