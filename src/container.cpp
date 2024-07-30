@@ -1,12 +1,11 @@
 #include "container.h"
-#include "defaultTrace.h"
-#include "defines/rethrowApi.h"
-#include "err.h"
 #include "processes.h"
+
+#include "defaultTrace.h"
+#include "err.h"
 
 #include <csignal>
 #include <linux/sched.h> /* Definition of struct clone_args */
-#include <stdarg.h>
 #include <sys/mman.h>
 #include <sys/mount.h>
 #include <sys/prctl.h>

@@ -2,7 +2,8 @@
 #include "container.h"
 #include "core.hpp"
 #include "processes.h"
-#include "test.h"
+
+#include "allocators/sharedMemoryPool.h"
 
 #include <cstdint>
 #include <err.h>
@@ -25,11 +26,15 @@ err_t testsMain([[maybe_unused]] void *data)
 	int res = 0;
 
 	QUITE_CHECK(mount("./tmp", "./tmp", "tmpfs", 0, NULL) == 0);
+	RETHROW(initSharedMemory());
 	RETHROW(initLogger());
 	CHECK_TIME(res = RUN_ALL_TESTS());
 	CHECK_ERRORCODE(res == 0, (uint64_t)res);
+
 cleanup:
 	closeLogger();
+	REWARN(closeSharedMemory());
+
 	return err;
 }
 
@@ -58,34 +63,3 @@ cleanup:
 
 	return err.errorCode;
 }
-/* 
-TEST(log, log)
-{
-	LOG_INFO("hello world");
-}
-
-TEST(log, logLevels)
-{
-	CHECK_TIME({
-		LOG_TRACE("trace level");
-		LOG_DEBUG("debug level");
-		LOG_INFO("info level");
-		LOG_WARN("warn level");
-		LOG_ERR("err level");
-		LOG_CRITICAL("critical level");
-	});
-}
-
-TEST(log, logFromC)
-{
-	logFromC();
-}
-
-TEST(err, checkFail)
-{
-	err_t err = NO_ERRORCODE;
-	CHECK(false);
-
-cleanup:
-	LOG_TRACE("error: {}", err.value);
-} */

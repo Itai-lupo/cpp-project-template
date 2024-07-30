@@ -10,3 +10,9 @@
 [submodule "sockets"]
 	path = vendor/simpleSockets
 	url = git@github.com:Itai-lupo/simple-sockets.git
+[submodule "vendor/dataStructures"]
+	path = vendor/dataStructures
+	url = https://github.com/Itai-lupo/simple-data-structures
+[submodule "vendor/simpleMemory"]
+	path = vendor/simpleMemory
+	url = git@github.com:Itai-lupo/simple-memory.git

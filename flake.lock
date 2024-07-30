@@ -126,7 +126,23 @@
       "inputs": {
         "flake-parts": "flake-parts",
         "nixpkgs": "nixpkgs",
-        "pre-commit-hooks": "pre-commit-hooks"
+        "pre-commit-hooks": "pre-commit-hooks",
+        "src": "src"
+      }
+    },
+    "src": {
+      "flake": false,
+      "locked": {
+        "dirtyRev": "3b38ca0264b9e692afa7cf04c6732ab5894d2fe3-dirty",
+        "dirtyShortRev": "3b38ca0-dirty",
+        "lastModified": 1720217555,
+        "narHash": "sha256-57mF6bQUdloRXNSOeVPdftX66+5GN0qGlB76K/heyMk=",
+        "type": "git",
+        "url": "file:.?submodules=1"
+      },
+      "original": {
+        "type": "git",
+        "url": "file:.?submodules=1"
       }
     }
   },

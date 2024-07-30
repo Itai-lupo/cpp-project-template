@@ -32,6 +32,7 @@ void *benchmarck(void *)
 
 	return NULL;
 }
+
 using namespace fmt::literals;
 err_t childMain([[maybe_unused]] void *data)
 {
@@ -79,7 +80,6 @@ cleanup:
 	{
 		printf("exited by signal %d and %s left coredump ", mainProcessExitStatus.terminatedBySignal,
 			   (mainProcessExitStatus.exitBy.leftCoreDump ? "" : "didn't"));
-		return err.errorCode;
 	}
 
 	return err.errorCode;

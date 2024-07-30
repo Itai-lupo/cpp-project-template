@@ -1,2 +1,16 @@
-SRC_DIRS += vendor/logger/src vendor/simpleFiles/src vendor/simpleSockets/src
-INCLUDE_DIR +=  vendor/logger/include vendor/simpleErrorCheck/include vendor/simpleFiles/include vendor/simpleSockets/include
+INCLUDE_DIR += vendor/simpleErrorCheck/include
+
+SRC_DIRS += vendor/logger/src
+INCLUDE_DIR +=  vendor/logger/include 
+
+SRC_DIRS += vendor/simpleFiles/src
+INCLUDE_DIR += vendor/simpleFiles/include
+
+SRC_DIRS += vendor/simpleSockets/src
+INCLUDE_DIR += vendor/simpleSockets/include
+
+SRC_DIRS += vendor/dataStructures/src
+INCLUDE_DIR += vendor/dataStructures/include
+
+SRC_DIRS += vendor/simpleMemory/src
+INCLUDE_DIR +=  vendor/simpleMemory/include

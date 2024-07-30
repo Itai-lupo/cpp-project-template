@@ -50,9 +50,6 @@ LDLIBS +=  -lstdc++ -lm -lfmt
 -include $(SCRIPTS_DIR)/Makefile.pch
 -include $(DEPS)
 
-# print:
-	# @echo $(SRCS)
-
 all:
 	$(MAKE) $(BUILD_DIR)/include/files.json
 	$(MAKE) $(PCH_OUT)
