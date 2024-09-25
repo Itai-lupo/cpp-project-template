@@ -7,5 +7,5 @@ void logFromC()
 	LOG_INFO("hello from %s", "c");
 	CHECK(false);
 cleanup:
-    REWARN(err);
+	REWARN(err);
 }

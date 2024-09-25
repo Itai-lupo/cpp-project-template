@@ -26,14 +26,14 @@ err_t testsMain([[maybe_unused]] void *data)
 	int res = 0;
 
 	QUITE_CHECK(mount("./tmp", "./tmp", "tmpfs", 0, NULL) == 0);
-	RETHROW(initSharedMemory());
 	RETHROW(initLogger());
+	RETHROW(initSharedMemory());
 	CHECK_TIME(res = RUN_ALL_TESTS());
 	CHECK_ERRORCODE(res == 0, (uint64_t)res);
 
 cleanup:
-	closeLogger();
 	REWARN(closeSharedMemory());
+	closeLogger();
 
 	return err;
 }

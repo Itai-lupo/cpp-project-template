@@ -40,7 +40,7 @@ extern "C"
 	THROWS err_t killProcess(const pid_t pid);
 	THROWS err_t safeWaitPid(const pid_t pid, processState_t *status, int options);
 	THROWS err_t safeSleep(const struct timespec *req);
-	
+
 	THROWS err_t setUserPolicy(const uid_t uid, const gid_t gid);
 
 #ifdef __cplusplus

@@ -65,7 +65,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 	pid_t pid = 0;
 	processState_t mainProcessExitStatus = {{{0, 0, 0, 0, 0}}, {0}};
 
-
 	umask(0);
 	QUITE_RETHROW(runInContainer(childMain, NULL, &pid));
 	QUITE_RETHROW(safeWaitPid(pid, &mainProcessExitStatus, 0));

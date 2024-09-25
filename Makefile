@@ -34,7 +34,8 @@ EXTRA_DEPENDENCIES := $(PCH_OUT)
 INC_FLAGS := $(addprefix -I,$(INCLUDE_DIR))
 
 CXXFLAGS += $(INC_FLAGS)  -MMD -MP -g -pthread -O2 -ggdb3 -Wall -Wextra -Werror -pedantic-errors -DUSE_FILENAME
-CXXFLAGS +=  -Wno-gnu-zero-variadic-macro-arguments -Wno-gnu-anonymous-struct -Wno-nested-anon-types -fmacro-backtrace-limit=0 
+CXXFLAGS +=  -Wno-gnu-zero-variadic-macro-arguments -Wno-gnu-anonymous-struct -Wno-nested-anon-types -fmacro-backtrace-limit=0
+CXXFLAGS += -fsized-deallocation
 
 CFLAGS ?= -std=c2x 
 CPPFLAGS ?= -std=c++20 -Wno-c99-designator -Wno-c99-extensions
@@ -70,8 +71,8 @@ debug: all
 
 
 clean:
-	$(RM) -r $(BUILD_DIR) 
-	$(RM) -r $(OUTPUT_DIR)
+	$(RM) -r $(BUILD_DIR)/* 
+	$(RM) -r $(OUTPUT_DIR)/*
 
 .PHONY: clean print all test run_test run build_test debug_test debug
 
