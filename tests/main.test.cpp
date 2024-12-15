@@ -1,8 +1,9 @@
+#define PRINT_FUNCTION(logData) printf("%s from %d:%d\n", logData->msg, logData->metadata.fileId, logData->metadata.line);
 
 #include "container.h"
 #include "core.hpp"
 #include "processes.h"
-
+#include "os/rseq.h"
 #include "allocators/sharedMemoryPool.h"
 
 #include <cstdint>
@@ -26,8 +27,9 @@ err_t testsMain([[maybe_unused]] void *data)
 	int res = 0;
 
 	QUITE_CHECK(mount("./tmp", "./tmp", "tmpfs", 0, NULL) == 0);
-	RETHROW(initLogger());
+  	RETHROW(rseqInit());
 	RETHROW(initSharedMemory());
+	RETHROW(initLogger());
 	CHECK_TIME(res = RUN_ALL_TESTS());
 	CHECK_ERRORCODE(res == 0, (uint64_t)res);
 

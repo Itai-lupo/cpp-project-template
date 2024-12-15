@@ -1,4 +1,6 @@
+#include "allocators/sharedMemoryPool.h"
 #include "container.h"
+#include "defines/rethrowApi.h"
 #include "log.h"
 #include "processes.h"
 #include "test.h"
@@ -11,6 +13,8 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include "types/err_t.h"
 
 #define CHECK_TIME(x)                                                                                                  \
 	{                                                                                                                  \
@@ -26,9 +30,9 @@ void *benchmarck(void *)
 {
 	static int a = 0;
 	int b = a;
-
+	err_t err = NO_ERRORCODE;
 	pthread_setname_np(pthread_self(), fmt::format("logThread {}", a++).data());
-	CHECK_TIME(for (int i = 0; i < 100000 / 1; i++) { LOG_TRACE("{}: {}", b, i); });
+	CHECK_TIME(for (int i = 0; i < 100000 / 1; i++) {LOG_TRACE("{}: {}", b, i);});
 
 	return NULL;
 }
@@ -42,12 +46,9 @@ err_t childMain([[maybe_unused]] void *data)
 	pthread_t loggerThread[10] = {0};
 
 	QUITE_CHECK(mount("./tmp", "./tmp", "tmpfs", 0, NULL) == 0);
+	QUITE_RETHROW(initSharedMemory());
 	QUITE_RETHROW(initLogger());
-
-	LOG_WARN("aa {} aa", fmt::styled(b, fmt::fg(fmt::color::green) | fmt::bg(fmt::color::blue)));
-	LOG_ERR("aa");
-	LOG_INFO("aa {aaa:}", "aaa"_a = gettid());
-	logFromC();
+    
 
 	CHECK_TIME(
 		for (size_t i = 0; i < 10; i++) { pthread_create(&loggerThread[i], NULL, benchmarck, NULL); }
@@ -55,6 +56,8 @@ err_t childMain([[maybe_unused]] void *data)
 		for (size_t i = 0; i < 10; i++) { pthread_join(loggerThread[i], NULL); });
 
 cleanup:
+	QUITE_RETHROW(closeSharedMemory());
+
 	REWARN(closeLogger());
 	return err;
 }

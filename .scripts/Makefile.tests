@@ -17,7 +17,7 @@ endif
 
 
 test: build_tests
-	$(OUTPUT_DIR)/test.out
+		GLIBC_TUNABLES=glibc.pthread.rseq=0 $(OUTPUT_DIR)/test.out
 
 
 debug_test: build_tests

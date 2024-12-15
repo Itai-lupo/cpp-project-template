@@ -1,10 +1,14 @@
+
+#include "defines/logMacros.h"
 #include "log.h"
 
-#include "allocators/sharedMemoryPool.h"
 #include "err.h"
+#include "allocators/sharedMemoryPool.h"
 #include "processes.h"
+#include "types/err_t.h"
 #include "types/memoryAllocator.h"
 
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <unistd.h>
 
@@ -118,112 +122,115 @@ cleanup:
 TEST(sharedMemoryPool, allocateAndFreeAlot)
 {
 	err_t err = NO_ERRORCODE;
-	int *data[40000] = {NULL};
+	int **data = NULL;
+	RETHROW(sharedAlloc((void **)&data, 400000, sizeof(int *), 0, NULL));
 
-	for(int i = 0; i < 40000; i++)
+	for (int i = 0; i < 400000; i++)
 	{
-		RETHROW(sharedAlloc((void **)&data[i], 510, sizeof(int), 0, NULL));
-		
-    ASSERT_NE(data[i], nullptr);
 
-    memset(data[i], 0xFFFFFFFF, 510 * sizeof(int));
+		RETHROW(sharedAlloc((void **)&data[i], 1, sizeof(int), 0, NULL));
+		ASSERT_NE(data[i], nullptr);
+		*data[i] = i;
 	}
 
-	for(int i = 0; i < 40000; i++)
-  {
-  	RETHROW(sharedDealloc((void **)&data[i], NULL));
+	for (int i = 0; i < 400000; i++)
+	{
+		ASSERT_EQ(*data[i], i);
+		RETHROW(sharedDealloc((void **)&data[i], NULL));
 
-    ASSERT_EQ(data[i], nullptr);
-  }
+		ASSERT_EQ(data[i], nullptr);
+	}
+
+	RETHROW(sharedDealloc((void **)&data, NULL));
 
 cleanup:
-  REWARN(err);
+	REWARN(err);
 	ASSERT_TRUE(!IS_ERROR(err));
 }
 
-//no need to run that test every time as it is long and uses around 8-16GiB of ram. 
+// no need to run that test every time as it is long and uses around 8-16GiB of ram.
 TEST(sharedMemoryPool, DISABLED_useAllTheMemory)
 {
 	err_t err = NO_ERRORCODE;
 	int *data = NULL;
-  size_t j = 0;
+	size_t j = 0;
 	while (true)
 	{
-    j++;
+		j++;
 		QUITE_RETHROW(sharedAlloc((void **)&data, 510, sizeof(int), 0, NULL));
 		ASSERT_NE(data, nullptr);
 
 		data = nullptr;
 	}
+
 cleanup:
-  REWARN(err);
-  LOG_INFO("{}", j);
+	REWARN(err);
+	LOG_INFO("{}", j);
 	ASSERT_TRUE(err.errorCode == ENOMEM);
 }
 
-static void  __attribute__((noreturn)) allocateAndFreeALotOfMemory(){
-  err_t err = NO_ERRORCODE;
-  pid_t pid = 0; 
-  pid_t *data[4000] = {NULL};
-  
-  pid = getpid();
+static void __attribute__((noreturn, optnone)) allocateAndFreeALotOfMemory()
+{
+	err_t err = NO_ERRORCODE;
+	pid_t pid = 0;
+	volatile pid_t *data[40000] = {NULL};
 
-  for(int i = 0; i < 4000; i++)
+	pid = getpid();
+	for (int k = 0; k < 10; k++)
 	{
-		RETHROW(sharedAlloc((void **)&data[i], 510, sizeof(pid_t), 0, NULL));
-		
-    CHECK_NOTRACE_ERRORCODE(data[i] != nullptr, ENOMEM);
+		for (int i = 0; i < 40000; i++)
+		{
+			err_t err = NO_ERRORCODE;
+			RETHROW(sharedAlloc((void **)&data[i], 1, sizeof(pid_t), 0, NULL));
+			
+			CHECK_NOTRACE_ERRORCODE(data[i] != nullptr, ENOMEM);
+			CHECK_NOHANDLE_TRACE(data[i][0] == 0, "{}", (uint64_t)data[i][0]);
+			data[i][0] = pid;
+		}
 
-    memset(data[i], pid, 510 * sizeof(pid_t));
+		for (int i = 0; i < 40000; i++)
+		{
+			CHECK_NOHANDLE_ERRORCODE_TRACE(data[i][0] == pid, EINVAL, "{} {} {} {} {}", (void *)data[i], (pid_t)data[i][0], (pid_t)pid, i, k);
+
+			RETHROW(sharedDealloc((void **)&data[i], NULL));
+			CHECK_NOTRACE_ERRORCODE(data[i] == nullptr, EFAULT);
+		}
 	}
 
-	for(int i = 0; i < 4000; i++)
-  {
-    for(int j = 0; j < 510; j++)
-    {
-      CHECK_NOTRACE_ERRORCODE(data[i][j] == pid, EINVAL);
-    } 
-
-  	RETHROW(sharedDealloc((void **)&data[i], NULL));
-
-    CHECK_NOTRACE_ERRORCODE(data[i] == nullptr, EFAULT);
-  }
-
 cleanup:
-  REWARN(err);
-  exit(err.errorCode);
+	
+	exit(err.errorCode);
 }
 
 TEST(sharedMemoryPool, allocateAndFreeAlotButForkAlot)
 {
 	err_t err = NO_ERRORCODE;
-  pid_t pids[100] = {0};
-	processState_t childsExitStatus[100];
-  int childCount = 0;
+	pid_t pids[2000] = {0};
+	processState_t childsExitStatus[2000];
+	int childCount = 0;
 
-  for(childCount = 0; childCount < 100; childCount++)
-  {
-    pids[childCount] = fork();
-    QUITE_CHECK(pids[childCount] != -1);
-    if(pids[childCount] == 0)
-    {
-      allocateAndFreeALotOfMemory();
-    }
-  }
-	
+	for (childCount = 0; childCount < 200; childCount++)
+	{
+		pids[childCount] = fork();
+		QUITE_CHECK(pids[childCount] != -1);
+		if (pids[childCount] == 0)
+		{
+			allocateAndFreeALotOfMemory();
+		}
+	}
+
 cleanup:
-  for(int i = 0; i < childCount; i++)
-  {
-	  REWARN(safeWaitPid(pids[i], &childsExitStatus[i], 0));
-  }
+	for (int i = 0; i < childCount; i++)
+	{
+		REWARN(safeWaitPid(pids[i], &childsExitStatus[i], 0));
+	}
 
-  for(int i = 0; i < childCount; i++){
-	  ASSERT_TRUE(childsExitStatus[i].exitBy.normal) << "exited by sig " << childsExitStatus[i].terminatedBySignal;
-	  ASSERT_EQ(childsExitStatus[i].exitStatus, 0) << "exited with value " << childsExitStatus[i].exitStatus;
-  }
+	for (int i = 0; i < childCount; i++)
+	{
+		ASSERT_TRUE(childsExitStatus[i].exitBy.normal) << "exited by sig " << childsExitStatus[i].terminatedBySignal;
+		ASSERT_EQ(childsExitStatus[i].exitStatus, 0) << "exited with value " << childsExitStatus[i].exitStatus;
+	}
 
-  REWARN(err);
+	REWARN(err);
 	ASSERT_TRUE(!IS_ERROR(err));
 }
-
-

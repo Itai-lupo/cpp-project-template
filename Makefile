@@ -33,12 +33,12 @@ EXTRA_DEPENDENCIES := $(PCH_OUT)
 
 INC_FLAGS := $(addprefix -I,$(INCLUDE_DIR))
 
-CXXFLAGS += $(INC_FLAGS)  -MMD -MP -g -pthread -O2 -ggdb3 -Wall -Wextra -Werror -pedantic-errors -DUSE_FILENAME
-CXXFLAGS +=  -Wno-gnu-zero-variadic-macro-arguments -Wno-gnu-anonymous-struct -Wno-nested-anon-types -fmacro-backtrace-limit=0
-CXXFLAGS += -fsized-deallocation
+CXXFLAGS += $(INC_FLAGS)  -MMD -MP -g -pthread -O2 -ggdb3 -Wall -Wextra -Werror -pedantic-errors 
+CXXFLAGS +=  -Wno-gnu-zero-variadic-macro-arguments -Wno-gnu-anonymous-struct -Wno-nested-anon-types -Wno-c11-extensions -fmacro-backtrace-limit=0
+CXXFLAGS += -fsized-deallocation -g3
 
 CFLAGS ?= -std=c2x 
-CPPFLAGS ?= -std=c++20 -Wno-c99-designator -Wno-c99-extensions
+CPPFLAGS ?= -std=c++20 -Wno-c99-designator -Wno-c99-extensions -Wno-gnu-label-as-value 
 
 LDFLAGS =  
 LDLIBS +=  -lstdc++ -lm -lfmt
@@ -63,7 +63,7 @@ $(OUTPUT_DIR)/$(TARGET_EXEC): $(EXTRA_DEPENDENCIES) $(OBJS)
 
 
 run: all
-	./$(OUTPUT_DIR)/$(TARGET_EXEC)
+	GLIBC_TUNABLES=glibc.pthread.rseq=0 ./$(OUTPUT_DIR)/$(TARGET_EXEC)
 
 
 debug: all
