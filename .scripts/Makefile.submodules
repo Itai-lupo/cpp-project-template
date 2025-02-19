@@ -1,16 +1,54 @@
-INCLUDE_DIR += vendor/simpleErrorCheck/include
+UTILS_PATH := $(PWD)/vendor/simpleUtils/
+LOGGER_PATH := $(PWD)/vendor/logger/
 
-SRC_DIRS += vendor/logger/src
-INCLUDE_DIR +=  vendor/logger/include 
 
-SRC_DIRS += vendor/simpleFiles/src
-INCLUDE_DIR += vendor/simpleFiles/include
+#some submdules might want to know the path for the utils or logger output
+export UTILS_SO := $(OUTPUT_DIR)/utils.so
+export UTILS_A := $(OUTPUT_DIR)/utils.a
+export UTILS_PCH := $(BUILD_DIR)/include/utils.hpp.pch
 
-SRC_DIRS += vendor/simpleSockets/src
-INCLUDE_DIR += vendor/simpleSockets/include
+export LOGGER_SO := $(OUTPUT_DIR)/logger.so
+export LOGGER_A := $(OUTPUT_DIR)/logger.a
+export LOGGER_PCH := $(BUILD_DIR)/include/logger.hpp.pch
 
-SRC_DIRS += vendor/dataStructures/src
-INCLUDE_DIR += vendor/dataStructures/include
+export BUILD_DIR
+export OUTPUT_DIR
 
-SRC_DIRS += vendor/simpleMemory/src
-INCLUDE_DIR +=  vendor/simpleMemory/include
+############################## include simpleUtils ####################################
+UTILS_SRCS :=  $(addprefix $(UTILS_PATH),$(shell   MAKEFLAGS= $(MAKE) -s -C $(UTILS_PATH) get_srcs -s))
+export UTILS_PCH_PATH :=  $(addprefix $(UTILS_PATH),$(shell  MAKEFLAGS=  $(MAKE)  -s -C $(UTILS_PATH) get_pch_path -s))
+export UTILS_INCLUDE_PATH :=  $(addprefix $(UTILS_PATH),$(shell   MAKEFLAGS= $(MAKE)  -s -C $(UTILS_PATH) get_include_paths -s))
+
+UTILS_EXTRA_DEPENDENCIES :=  $(foreach dir,$(UTILS_INCLUDE_PATH),$(call rwildcard,$(dir),*.h*)) $(BUILD_DIR)/include/files.json 
+
+$(UTILS_PCH): $(UTILS_PCH_PATH) $(UTILS_EXTRA_DEPENDENCIES)
+	$(MAKE) -C $(UTILS_PATH)  $(UTILS_PCH)
+
+$(UTILS_SO) $(UTILS_A): $(UTILS_SRCS) $(UTILS_EXTRA_DEPENDENCIES)
+
+utils: $(UTILS_A) $(UTILS_SO)
+	$(MAKE) -C $(UTILS_PATH) all
+
+
+############################## include loggger ########################################
+LOGGER_SRCS :=  $(addprefix $(LOGGER_PATH),$(shell   MAKEFLAGS= $(MAKE)  -s -C ./vendor/logger get_srcs -s))
+export LOGGER_PCH_PATH :=  $(addprefix $(LOGGER_PATH),$(shell  MAKEFLAGS=  $(MAKE)  -C ./vendor/logger get_pch_path -s))
+export LOGGER_INCLUDE_PATH :=  $(addprefix $(LOGGER_PATH),$(shell  MAKEFLAGS=  $(MAKE)  -C ./vendor/logger get_include_paths -s))
+
+LOGGER_EXTRA_DEPENDENCIES :=  $(foreach dir,$(LOGGER_INCLUDE_PATH),$(call rwildcard,$(dir),*.h*)) $(BUILD_DIR)/include/files.json utils
+
+$(LOGGER_PCH): $(LOGGER_PCH_PATH) $(LOGGER_EXTRA_DEPENDENCIES)
+	$(MAKE) -C ./vendor/logger  $(UTILS_PCH)
+
+$(LOGGER_SO) $(LOGGER_A): $(LOGGER_SRCS) $(LOGGER_EXTRA_DEPENDENCIES)
+
+logger: $(LOGGER_A) $(LOGGER_SO)
+	$(MAKE) -C ./vendor/logger all
+
+
+INCLUDE_DIR += $(UTILS_INCLUDE_PATH) $(LOGGER_INCLUDE_PATH)
+SUBMODULES_SRCS := $(UTILS_SRCS) $(LOGGER_SRCS)
+
+LDFLAGS +=  $(UTILS_A) $(LOGGER_A)
+
+EXTRA_DEPENDENCIES += utils logger

@@ -1,11 +1,11 @@
 
 
-$(PCH_OUT): $(PCH_PATH)
+$(PCH_OUT): $(PCH_PATH) $(UTILS_PCH) 
 	@echo "building pch" 
 	@echo $(MAKECMDGOALS) $(PCH_OUT)
-	$(CXX) -c $(INC_FLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(PCH_OUT) $(PCH_PATH)
+	$(CXX) -c  -include-pch $(UTILS_PCH) $(INC_FLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(PCH_OUT) $(PCH_PATH)
 
 
-ifneq (./$(MAKECMDGOALS),$(PCH_OUT))
-# CPPFLAGS += -include-pch $(PCH_OUT) 
+ifneq ($(MAKECMDGOALS),$(PCH_OUT))
+CPPFLAGS += -include-pch $(PCH_OUT) 
 endif

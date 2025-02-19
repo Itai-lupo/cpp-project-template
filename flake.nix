@@ -57,6 +57,9 @@
             gnumake
             clang-tools
             (python3.withPackages (ps: with ps; [ ipython black compiledb ]))
+            pyright
+            ruff
+            inotify-tools
           ];
 
           buildInputs = with pkgs; [

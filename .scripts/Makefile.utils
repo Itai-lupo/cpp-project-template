@@ -9,3 +9,13 @@ turnInfoObjectFile = $(addprefix $(BUILD_DIR)/,$(addsuffix .o,$(basename $1)))
 
 
 MKDIR_P ?= mkdir -p
+
+WATCH_TARGET ?= all
+
+watch:
+	while true; \
+	do \
+		$(MAKE) $(WATCH_TARGET); \
+		echo build finished, watching for changes; \
+		inotifywait -qre  create,modify,delete --include '.*(\.[ch].*$\)' .; \
+	done  

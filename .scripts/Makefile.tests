@@ -32,7 +32,7 @@ build_tests:
 
 all_tests: $(OUTPUT_DIR)/test.out
 
-$(OUTPUT_DIR)/test.out: $(TEST_OBJS)
+$(OUTPUT_DIR)/test.out: $(TEST_OBJS) $(EXTRA_DEPENDENCIES) 
 	$(MKDIR_P) $(OUTPUT_DIR)
 	$(CC)  $(CXXFLAGS) $(TEST_OBJS) -o $@ $(LDFLAGS) $(LDLIBS)
 

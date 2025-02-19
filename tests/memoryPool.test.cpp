@@ -1,5 +1,4 @@
 
-#include "defines/logMacros.h"
 #include "log.h"
 
 #include "err.h"

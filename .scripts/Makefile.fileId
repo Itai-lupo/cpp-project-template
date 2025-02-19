@@ -1,13 +1,14 @@
 # run a python code to get a file id from files.json
-getFileId = $(shell python -c "import json; files = json.load(open('./.build/include/files.json', 'r')); print(files[[file[0] for file in files].index('$(1)')][1])" 2>/dev/null)
-
+getFileId = $(shell python -c "import json; files = json.load(open('$(BUILD_DIR)/include/files.json', 'r')); print([file[1] for file in files if file[0].endswith('$(1)')][0])" 2>/dev/null)
 
 # genrate a json file with all the source files and there id
-$(BUILD_DIR)/include/files.json: $(SRCS) 
+$(BUILD_DIR)/include/files.json: $(SRCS) $(SUBMODULES_SRCS)
 	@echo "building files.json"
 	$(MKDIR_P) $(BUILD_DIR)/include
 	python $(SCRIPTS_DIR)/addFIleToFIleList.py
 
 
+ifneq ($(MAKECMDGOALS),$(PCH_OUT))
 CXXFLAGS += -DFILE_ID=$(call getFileId,$<) 
 EXTRA_DEPENDENCIES += $(BUILD_DIR)/include/files.json
+endif

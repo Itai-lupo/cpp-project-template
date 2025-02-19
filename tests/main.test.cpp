@@ -1,6 +1,8 @@
 #define PRINT_FUNCTION(logData) printf("%s from %d:%d\n", logData->msg, logData->metadata.fileId, logData->metadata.line);
 
 #include "container.h"
+#include "log.h"
+
 #include "core.hpp"
 #include "processes.h"
 #include "os/rseq.h"
